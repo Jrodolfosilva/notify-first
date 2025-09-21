@@ -2,6 +2,7 @@
 //Service
 
 export default class ClientWorkana {
+  
   constructor(BASE_URL_WORKANA, HEADERS_WORKANA) {
     this.baseUrl = BASE_URL_WORKANA;
     this.headersWorkana = HEADERS_WORKANA;

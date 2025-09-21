@@ -1,18 +1,21 @@
 import express from "express";
 import UseWorkana from "../controllers/useWorkana.js";
-import client from "../db/redis/clientRedis.js";
+import clientRedis from "../db/redis/clientRedis.js";
 const port = 3000;
 const controllerWorkana = new UseWorkana();
 const app = express();
 app.use(express.json());
 
 app.get("/healthcheck", async (req, res) => {
-  res.send("OK");
+ 
+ 
+  res.send("okay");
+
 });
 
 
 //espera a conexão do redis e inicia o servidor
-client.ping().then(() => {
+clientRedis.ping().then(() => {
   console.log("Redis is connected");
     
   app.listen(port,() => {
@@ -25,7 +28,7 @@ client.ping().then(() => {
               console.log(error);
            }
            finally{
-            setTimeout(runWorkana, 600000); //60s x 1000ms = 60000 ms 
+            setTimeout(runWorkana, 60000); //60s x 1000ms = 60000 ms 
            }
         }
         runWorkana();
