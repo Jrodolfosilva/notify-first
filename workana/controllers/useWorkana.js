@@ -1,27 +1,49 @@
-
 //controller
 
-import { BASE_URL_WORKANA, HEADERS_WORKANA, PAGES } from "../services/config.js"
+import clientRedis from "../db/redis/clientRedis.js";
+import {
+  BASE_URL_WORKANA,
+  HEADERS_WORKANA,
+  PAGES,
+} from "../services/config.js";
+
 import ClientWorkana from "../services/client-workana.js";
 const serviceWorkana = new ClientWorkana(BASE_URL_WORKANA, HEADERS_WORKANA);
 
 export default class UseWorkana {
-
   async execute() {
-   const allJobs = await Promise.all(
-      Array.from({length:PAGES},(_,i)=>serviceWorkana.getJobs(i))
-   )
-   const data = allJobs.flat()
-   
-    
+    const allJobs = await Promise.all(
+      Array.from({ length: PAGES }, (_, i) => serviceWorkana.getJobs(i))
+    );
+    const data = allJobs.flat();
+    this.processJobs(data);
   }
 
+  async processJobs(dataAllJobs) {
+    for (const job of dataAllJobs) {
+      const exist = await clientRedis.get(`workana:${job.slug}`);
 
-  async notify(job) {
-    console.log('notificando', job.slug)
+      if (exist) {
+        console.log("Já foi cadastro!");
+        continue;
+
+      }
+      if (!exist) {
+        try {
+          await clientRedis.set(`workana:${job.slug}`, JSON.stringify(job), {
+            EX: 172800,
+          }); //TTL em segundos: 2 dias (2 * 24 * 60 * 60)
+
+          this.emitirJob(job);
+        } catch (error) {
+          console.log(error);
+        }
+      }
+    }
   }
 
-  async saveJobs() {
-    console.log('salvando jobs')
+  async emitirJob(job) {
+    console.log("notificando", job.slug);
+    //emitir mensagem no rabbitmq
   }
 }
