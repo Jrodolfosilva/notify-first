@@ -1,5 +1,5 @@
 //controller
-
+import { BrokerPublish } from "../broker/channel/queueSaveJob.js";
 import clientRedis from "../db/redis/clientRedis.js";
 import {
   BASE_URL_WORKANA,
@@ -9,6 +9,8 @@ import {
 
 import ClientWorkana from "../services/client-workana.js";
 const serviceWorkana = new ClientWorkana(BASE_URL_WORKANA, HEADERS_WORKANA);
+const broker = new BrokerPublish();
+broker.init()
 
 export default class UseWorkana {
   async execute() {
@@ -26,7 +28,6 @@ export default class UseWorkana {
       if (exist) {
         console.log("Já foi cadastro!");
         continue;
-
       }
       if (!exist) {
         try {
@@ -34,7 +35,7 @@ export default class UseWorkana {
             EX: 172800,
           }); //TTL em segundos: 2 dias (2 * 24 * 60 * 60)
 
-          this.emitirJob(job);
+          this.emitJob(job);
         } catch (error) {
           console.log(error);
         }
@@ -42,8 +43,10 @@ export default class UseWorkana {
     }
   }
 
-  async emitirJob(job) {
-    console.log("notificando", job.slug);
-    //emitir mensagem no rabbitmq
+  async emitJob(job) {
+    const sendMessage = await broker.publish("save_job", job, true);
+    if (!sendMessage) {
+      throw new Error("Message not send");
+    }
   }
 }
