@@ -1,6 +1,7 @@
 import amqp from "amqplib";
 
 export class BrokerPublish {
+
   constructor() {
     this.connection = null;
     this.channel = null;
@@ -22,7 +23,7 @@ export class BrokerPublish {
 
     await this.channel.assertQueue(queue, { durable });
 
-    const sent = this.channel.sendToQueue(queue, Buffer.from(JSON.stringify(job)));
-    return sent; // true ou false
+    const send = this.channel.sendToQueue(queue, Buffer.from(JSON.stringify(job)));
+    return send; // true ou false
   }
 }
